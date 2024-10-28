@@ -1,6 +1,6 @@
 package com.DanielOpara.FileServer.jwt;
 
-import com.DanielOpara.FileServer.Repository.UserRepository;
+import com.DanielOpara.FileServer.repository.UserRepository;
 import com.DanielOpara.FileServer.model.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
