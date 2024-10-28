@@ -15,21 +15,22 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-    private final AuthenticationManager authenticationManager;
+//    private final AuthenticationManager authenticationManager;
     private final JwtAuthService jwtAuthService;
     private final CustomAccessDeniedHandler accessDeniedHandler;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
-    private AuthenticationProvider authenticationProvider;
+    private final AuthenticationProvider authenticationProvider;
 
     private static final String[] AUTH_WHITELIST = {
             "/v3/api-docs/**", "/configuration/**", "/swagger-ui/**",
             "/swagger-resources/**", "/swagger-ui.html", "/webjars/**", "/api-docs/**",
-
+            "/api/v1/user/create", "/api/v1/auth/login"
     };
 
     @Bean
@@ -46,5 +47,9 @@ public class SecurityConfig {
                 .addFilterBefore(jwtAuthService, UsernamePasswordAuthenticationFilter.class);
 
         return httpSecurity.build();
+    }
+    @Bean
+    public SecurityContextLogoutHandler securityContextLogoutHandler() {
+        return new SecurityContextLogoutHandler();
     }
 }
