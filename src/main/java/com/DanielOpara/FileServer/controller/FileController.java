@@ -43,4 +43,17 @@ public class FileController {
             return new ResponseEntity<>(response, HttpStatusCode.valueOf(response.getStatusCode()));
         }
     }
+
+    @GetMapping("/user-file/{id}")
+    ResponseEntity<?> getUserFileByFileId(@AuthenticationPrincipal UserDetails currentUser, @PathVariable Long id) {
+        String email = currentUser.getUsername();
+        BaseResponse response = fileService.getAFileByEmail(id,email);
+
+        if(response.getStatusCode() == HttpServletResponse.SC_OK){
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }else{
+            return new ResponseEntity<>(response, HttpStatusCode.valueOf(response.getStatusCode()));
+        }
+    }
+
 }

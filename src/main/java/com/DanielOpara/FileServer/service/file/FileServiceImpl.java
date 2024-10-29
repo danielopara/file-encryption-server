@@ -95,7 +95,7 @@ public class FileServiceImpl implements FileService {
     @Override
     public BaseResponse getFilesByEmail(String email) {
        try{
-           List<FileModel> userEmail = fileRepository.findByEmail(email);
+           Optional<FileModel> userEmail = fileRepository.findByEmail(email);
            if(userEmail.isEmpty()){
                return new BaseResponse(
                        HttpServletResponse.SC_BAD_REQUEST,
@@ -127,4 +127,47 @@ public class FileServiceImpl implements FileService {
            );
        }
     }
+
+    @Override
+    public BaseResponse getAFileByEmail(Long id, String email) {
+        try {
+            Optional<FileModel> fileOptional = fileRepository.findById(id);
+
+            if (fileOptional.isEmpty()) {
+                return new BaseResponse(
+                        HttpServletResponse.SC_BAD_REQUEST,
+                        "File not found.",
+                        null
+                );
+            }
+
+            FileModel file = fileOptional.get();
+
+            if (!Objects.equals(file.getEmail(), email)) {
+                return new BaseResponse(
+                        HttpServletResponse.SC_FORBIDDEN,
+                        "Access denied: Email does not match file owner.",
+                        null
+                );
+            }
+
+            Map<String, Object> fileInfo = new HashMap<>();
+            fileInfo.put("id", file.getId());
+            fileInfo.put("fileName", file.getFileName());
+
+            return new BaseResponse(
+                    HttpServletResponse.SC_OK,
+                    "File retrieved successfully.",
+                    fileInfo
+            );
+
+        } catch (Exception e) {
+            return new BaseResponse(
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "Internal Server Error",
+                    e.getMessage()
+            );
+        }
+    }
+
 }

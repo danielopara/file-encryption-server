@@ -8,4 +8,5 @@ import java.io.IOException;
 public interface FileService {
     BaseResponse fileUpload(String email, MultipartFile file) throws Exception;
     BaseResponse getFilesByEmail(String email);
+    BaseResponse getAFileByEmail(Long id, String email);
 }
