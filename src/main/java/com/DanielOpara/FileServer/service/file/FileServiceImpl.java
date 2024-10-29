@@ -5,6 +5,8 @@ import com.DanielOpara.FileServer.repository.FileRepository;
 import com.DanielOpara.FileServer.response.BaseResponse;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -166,6 +168,48 @@ public class FileServiceImpl implements FileService {
                     HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                     "Internal Server Error",
                     e.getMessage()
+            );
+        }
+    }
+
+    @Override
+    public BaseResponse downloadFile(Long id, String email, HttpServletResponse response) {
+
+        try{
+
+            FileModel fileModel = fileRepository.findById(id)
+                    .orElseThrow(() -> new Exception("File not found"));
+
+            if(!Objects.equals(fileModel.getEmail(), email)){
+                return new BaseResponse(
+                        HttpServletResponse.SC_BAD_REQUEST,
+                        "cannot download this file",
+                        null
+                );
+            }
+
+            // Decrypt the file data
+            byte[] decryptedData = decryptFile(fileModel.getFileData());
+
+            // Set response headers
+            response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
+            response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileModel.getFileName() + "\"");
+            response.setContentLength(decryptedData.length);
+
+            // Write decrypted data to response output stream
+            response.getOutputStream().write(decryptedData);
+            response.getOutputStream().flush();
+
+            return new BaseResponse(
+                    HttpServletResponse.SC_OK,
+                    "file downloaded",
+                    fileModel.getFileName()
+            );
+        }catch(Exception e){
+            return new BaseResponse(
+              HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+              "Internal Server Error",
+              e.getMessage()
             );
         }
     }

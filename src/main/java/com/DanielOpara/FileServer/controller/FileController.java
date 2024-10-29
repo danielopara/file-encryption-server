@@ -56,4 +56,16 @@ public class FileController {
         }
     }
 
+    @GetMapping("/download/{id}")
+    ResponseEntity<?> downloadFile(@AuthenticationPrincipal UserDetails currentUser, HttpServletResponse response,
+                                   @PathVariable Long id){
+        String email = currentUser.getUsername();
+        BaseResponse file = fileService.downloadFile(id, email, response);
+        if(file.getStatusCode() == HttpServletResponse.SC_OK){
+            return new ResponseEntity<>(file, HttpStatus.OK);
+        }else {
+            return new ResponseEntity<>(file, HttpStatusCode.valueOf(file.getStatusCode()));
+        }
+    }
+
 }
