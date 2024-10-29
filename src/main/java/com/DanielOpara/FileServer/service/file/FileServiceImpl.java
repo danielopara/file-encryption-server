@@ -14,6 +14,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class FileServiceImpl implements FileService {
@@ -52,6 +54,18 @@ public class FileServiceImpl implements FileService {
         }
     }
 
+    private byte[] decryptFile(byte[] encryptedData) throws Exception {
+        SecretKeySpec secretKey = new SecretKeySpec(ENC_KEY.getBytes(), ALGORITHM);
+        Cipher cipher = Cipher.getInstance(ALGORITHM);
+        cipher.init(Cipher.DECRYPT_MODE, secretKey);
+
+        try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
+            byte[] outputBytes = cipher.doFinal(encryptedData);
+            byteArrayOutputStream.write(outputBytes);
+            return byteArrayOutputStream.toByteArray();
+        }
+    }
+
     @Override
     public BaseResponse fileUpload(String email, MultipartFile file) throws Exception {
         try{
@@ -76,5 +90,41 @@ public class FileServiceImpl implements FileService {
             );
         }
 
+    }
+
+    @Override
+    public BaseResponse getFilesByEmail(String email) {
+       try{
+           List<FileModel> userEmail = fileRepository.findByEmail(email);
+           if(userEmail.isEmpty()){
+               return new BaseResponse(
+                       HttpServletResponse.SC_BAD_REQUEST,
+                       "non-existence",
+                       null
+               );
+           }
+
+           List<Map<String, Object>> fileNames = userEmail.stream()
+                   .map(file->{
+                       Map<String, Object> fileInfo = new HashMap<>();
+                       fileInfo.put("id", file.getId());
+                       fileInfo.put("fileName", file.getFileName());
+                       return fileInfo;
+                   })
+                   .collect(Collectors.toList());
+
+           return new BaseResponse(
+                   HttpServletResponse.SC_OK,
+                   "Filenames retrieved successfully.",
+                   fileNames
+           );
+
+       }catch (Exception e) {
+           return new BaseResponse(
+                   HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                   "Internal Server Error",
+                   e.getMessage()
+           );
+       }
     }
 }
