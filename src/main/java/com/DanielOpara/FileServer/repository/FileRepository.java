@@ -7,5 +7,5 @@ import java.util.List;
 import java.util.Optional;
 
 public interface FileRepository extends JpaRepository<FileModel, Long> {
-    Optional<FileModel> findByEmail(String email);
+    List<FileModel> findByEmail(String email);
 }
