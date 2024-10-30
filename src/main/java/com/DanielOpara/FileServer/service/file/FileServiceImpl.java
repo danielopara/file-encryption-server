@@ -95,9 +95,40 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
+    public BaseResponse uploadMultipleFiles(String email, List<MultipartFile> files) {
+        try{
+            List<String> savedFileNames = new ArrayList<>();
+
+            for(MultipartFile file: files){
+                byte[] encryptedData = encryptFileToByteArray(file.getInputStream());
+                FileModel encryptedFile = new FileModel();
+                encryptedFile.setFileName(file.getOriginalFilename() + ".enc");
+                encryptedFile.setFileData(encryptedData);
+                encryptedFile.setEmail(email);
+                fileRepository.save(encryptedFile);
+
+                savedFileNames.add(file.getOriginalFilename());
+            }
+
+            return new BaseResponse(
+                    HttpServletResponse.SC_OK,
+                    "files saved",
+                    savedFileNames
+            );
+
+        }catch (Exception e){
+            return new BaseResponse(
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "Internal Server Error",
+                    e.getMessage()
+            );
+        }
+    }
+
+    @Override
     public BaseResponse getFilesByEmail(String email) {
        try{
-           Optional<FileModel> userEmail = fileRepository.findByEmail(email);
+           List<FileModel> userEmail = fileRepository.findByEmail(email);
            if(userEmail.isEmpty()){
                return new BaseResponse(
                        HttpServletResponse.SC_BAD_REQUEST,
@@ -105,6 +136,7 @@ public class FileServiceImpl implements FileService {
                        null
                );
            }
+
 
            List<Map<String, Object>> fileNames = userEmail.stream()
                    .map(file->{
@@ -211,6 +243,25 @@ public class FileServiceImpl implements FileService {
               "Internal Server Error",
               e.getMessage()
             );
+        }
+    }
+
+    @Override
+    public String renameFile(Long id, String email, String fileName) {
+        try{
+            FileModel file = fileRepository.findById(id)
+                    .orElseThrow(() -> new RuntimeException("File does not exist"));
+
+            if(!file.getFileName().equals(email)){
+                throw new RuntimeException("unauthorized file access");
+            }
+
+            file.setFileName(fileName);
+            fileRepository.save(file);
+
+            return "File name Updated!!!";
+        }catch (Exception e){
+            return "error";
         }
     }
 
