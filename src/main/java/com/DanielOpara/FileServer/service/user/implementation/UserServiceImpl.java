@@ -9,6 +9,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class UserServiceImpl implements UserService {
 
@@ -32,6 +34,14 @@ public class UserServiceImpl implements UserService {
                 );
             }
 
+            if(checkIfEmailExist(dto.getEmail())){
+                return new BaseResponse(
+                        HttpServletResponse.SC_BAD_REQUEST,
+                        "email exists",
+                        null
+                );
+            }
+
             if(!isEmailValid(dto.getEmail())){
                 return new BaseResponse(
                         HttpServletResponse.SC_BAD_REQUEST,
@@ -39,6 +49,7 @@ public class UserServiceImpl implements UserService {
                         null
                 );
             }
+
 
             User user = new User();
             String encodedPassword = passwordEncoder.encode(dto.getPassword());
@@ -66,5 +77,9 @@ public class UserServiceImpl implements UserService {
     private boolean isEmailValid(String email){
         String emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$";
         return email.matches(emailRegex);
+    }
+
+    private boolean checkIfEmailExist(String email){
+        return userRepository.findByEmail(email).isPresent();
     }
 }
